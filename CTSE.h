@@ -11,9 +11,8 @@
 #include "opencv2/imgproc/imgproc.hpp"
 
 #include "opencv2/features2d/features2d.hpp"
-#include "opencv2/nonfree/features2d.hpp"
-#include "opencv2/nonfree/nonfree.hpp"
-
+#include "opencv2/features2d/features2d.hpp"
+#include "opencv2/xfeatures2d/nonfree.hpp"
 #include <stdio.h>
 #include <fstream>
 #include <string>
@@ -41,71 +40,71 @@
 #define CTSE_DEFAULT_SIGMA_FGAUSSIAN (200.0)
 //! defines the default value for ContextualStructureTrackerCTSE::adaptKeyPoints passed for calculating fGaussian
 #define CTSE_DEFAULT_PROXIMITY_FACTOR_CONSTANT (0.05)
-		
-		
-class CTSE{
+
+
+class CTSE {
 public:
 
 	//! constructor1
 	CTSE();
-	
+
 	//! destructor
 	~CTSE();
 
-	void process(cv::Mat& oInitImg, size_t& nFrames, Point2f oBBCenter, size_t n_BBWidth, size_t n_BBHeight, cv::SiftFeatureDetector& oSiftDet, cv::BFMatcher& oMatcher);
+	void process(cv::Mat& oInitImg, size_t& nFrames, Point2f oBBCenter, size_t n_BBWidth, size_t n_BBHeight, Ptr<xfeatures2d::SIFT> oDetector, cv::BFMatcher& oMatcher);
 
 
- //! computes SIFT descriptors
+	//! computes SIFT descriptors
 
-cv::Mat computeDescriptor(const cv::Mat& oInitImg, std::vector<targetKeysInfo>& voStructuredKeyPoints);
+	cv::Mat computeDescriptor(const cv::Mat& oInitImg, std::vector<targetKeysInfo>& voStructuredKeyPoints);
 
- //! output center position by the tracker
- void predictCenter(std::vector< std::vector<float> > accum, float tRadius, std::vector<targetKeysInfo>& m_voFilteredKeyPoints);
-
-
- //! adapts the weight of the keypoints present in the appearance model for a target
-void adaptKeyPoints(std::vector<targetKeysInfo>& voFilteredKeyPoints, std::vector<targetKeysInfo>& voKeyPoints, cv::Point2f& oPredictedCenter, size_t oFrames);
+	//! output center position by the tracker
+	void predictCenter(std::vector< std::vector<float> > accum, float tRadius, std::vector<targetKeysInfo>& m_voFilteredKeyPoints);
 
 
-//! Voting by keypoints using encoded structure
-void voting(std::vector<targetKeysInfo>& voFilteredKeyPoints, std::vector<targetKeysInfo>& voKeyPoints, cv::Point2f& oPredictedCenter, cv::Mat oImage, size_t oFrames);
+	//! adapts the weight of the keypoints present in the appearance model for a target
+	void adaptKeyPoints(std::vector<targetKeysInfo>& voFilteredKeyPoints, std::vector<targetKeysInfo>& voKeyPoints, cv::Point2f& oPredictedCenter, size_t oFrames);
 
-void copyDescriptorStructuredKeyPoints(KeyPointCTSE& oKPCTSE, cv::Mat& oDescriptor);
 
-void filterMatches(vector<vector<DMatch>>& oMatches);
+	//! Voting by keypoints using encoded structure
+	void voting(std::vector<targetKeysInfo>& voFilteredKeyPoints, std::vector<targetKeysInfo>& voKeyPoints, cv::Point2f& oPredictedCenter, cv::Mat oImage, size_t oFrames);
 
-void correspondingMatches(vector<vector<DMatch>>& oMatchesR);
+	void copyDescriptorStructuredKeyPoints(KeyPointCTSE& oKPCTSE, cv::Mat& oDescriptor);
 
-void setIndicatorZero(std::vector<targetKeysInfo>& oKeyPoints);
-void setPowerOne(std::vector<targetKeysInfo>& oKeyPoints);
-	
-void drawOutput(cv::Rect& oROI, cv::Mat& oImage, size_t& nFrames);
-	
+	void filterMatches(vector<vector<DMatch>>& oMatches);
+
+	void correspondingMatches(vector<vector<DMatch>>& oMatchesR);
+
+	void setIndicatorZero(std::vector<targetKeysInfo>& oKeyPoints);
+	void setPowerOne(std::vector<targetKeysInfo>& oKeyPoints);
+
+	void drawOutput(cv::Rect& oROI, cv::Mat& oImage, size_t& nFrames);
+
 	cv::Mat m_oImage1, m_oImage2, m_oImage3, m_oDescriptor1, m_oDescriptor2, m_oImg_matches1;
-	
-	
+
+
 	//! Matched keypoints between two consecutive frames
-	cv::vector<DMatch> m_voMatchDes;
+	vector<DMatch> m_voMatchDes;
 	vector<vector<DMatch>> m_vvoMatchesR;
-	
+
 	//! Filtered matches after ratio test
 	std::vector< DMatch > m_voMatches, m_voGoodMatchesR;
-	
+
 	//! Training mat for the Keypoint Matcher
 	vector<Mat> m_voTraining;
 
 
 	//! Appearance Model Keypoints
 	//std::vector<targetKeysInfo> m_voModel;
-	
+
 
 	//! Weight associated with a keypoint
 	float m_fWeight;
 
 
 	//! Sift Extractor Object
-	cv::SiftDescriptorExtractor m_oExtractor; 
-	
+	//Ptr<xfeatures2d::SIFT> m_oExtractor;
+	cv::Ptr<Feature2D> m_oExtractor = xfeatures2d::SIFT::create(CTSE_DEFAULT_RETAIN_SIFT_FEATURES, CTSE_DEFAULT_OCTAVE_LAYERS, CTSE_DEFAULT_CONTRAST_THRESHOLD, CTSE_DEFAULT_EDGE_THRESHOLD, CTSE_DEFAULT_SIGMA); 
 	//! KeyPointCTSE class member
 	KeyPointCTSE m_oKeyPointModel, m_oKeyPointNonModel;
 
@@ -114,10 +113,10 @@ void drawOutput(cv::Rect& oROI, cv::Mat& oImage, size_t& nFrames);
 
 protected:
 	//! SIFT detector initializer values
-	 int m_nFeatures;
-	 int m_nOctaveLayers;
-	 double m_ContrastThreshold;
-	 double m_EdgeThreshold;
-	 double m_sigma;	
+	int m_nFeatures;
+	int m_nOctaveLayers;
+	double m_ContrastThreshold;
+	double m_EdgeThreshold;
+	double m_sigma;
 
 };
