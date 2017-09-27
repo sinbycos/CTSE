@@ -17,8 +17,7 @@ void CTSE::process(cv::Mat& oInitImg, size_t& nFrames, Point2f oBBCenter, size_t
 	cv::Rect oOutputROI;
 	cv::Point2f oPt1, oPt2;
 	vector<KeyPoint> oDrawKeysModel;
-	oInitImg.copyTo(oInputFrameOne);
-	//oInputFrameOne = oInitImg.clone();
+	oInputFrameOne = oInitImg.clone();
 	if (nFrames == 1)
 	{	
 
