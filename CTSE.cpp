@@ -6,7 +6,7 @@ CTSE::CTSE(){
 CTSE::~CTSE(){
 }
 
-void CTSE::process(cv::Mat& oInitImg, size_t& nFrames, Point2f oBBCenter, size_t n_BBWidth, size_t n_BBHeight, cv::SiftFeatureDetector& oDetector, cv::BFMatcher& oMatcher){
+void CTSE::process(cv::Mat& oInitImg, size_t& nFrames, Point2f oBBCenter, size_t n_BBWidth, size_t n_BBHeight, Ptr<xfeatures2d::SIFT> oDetector, cv::BFMatcher& oMatcher){
 
 	std::vector<KeyPoint> oDetectedKeys;
 	cv::Mat oDescriptor2; std::vector<Mat> oTraining;
@@ -17,14 +17,13 @@ void CTSE::process(cv::Mat& oInitImg, size_t& nFrames, Point2f oBBCenter, size_t
 	cv::Rect oOutputROI;
 	cv::Point2f oPt1, oPt2;
 	vector<KeyPoint> oDrawKeysModel;
-
 	oInputFrameOne = oInitImg.clone();
 	if (nFrames == 1)
 	{	
 
 
 
-		oDetector.detect(oInputFrameOne, oDetectedKeys);
+		oDetector->detect(oInputFrameOne, oDetectedKeys);
 		m_oKeyPointModel.createStructuralConfiguration(oDetectedKeys);
 		setPowerOne(m_oKeyPointModel.m_voStructuredKeyPoints);
 		//m_oKeyPointModel.setROI(oBBCenter, n_BBWidth, n_BBHeight);
@@ -57,7 +56,7 @@ void CTSE::process(cv::Mat& oInitImg, size_t& nFrames, Point2f oBBCenter, size_t
 		cv::Mat oInputFrameTwo = oInitImg.clone();
 		cv::Mat oInputFrameTwoCopy = oInitImg.clone();
 		cv::Mat oInputFrameTwoCopy2 = oInitImg.clone();
-		oDetector.detect(oInputFrameTwo, oDetectedKeys);
+		oDetector->detect(oInputFrameTwo, oDetectedKeys);
 		m_oKeyPointNonModel.createStructuralConfiguration(oDetectedKeys);
 		oDescriptor2 = computeDescriptor(oInputFrameTwo,m_oKeyPointNonModel.m_voStructuredKeyPoints);
 		copyDescriptorStructuredKeyPoints(m_oKeyPointNonModel, oDescriptor2);
@@ -89,8 +88,9 @@ cv::Mat CTSE::computeDescriptor(const cv::Mat& oInitImg, std::vector<targetKeysI
 
 		voSiftKeys.push_back(voStructuredKeyPoints[i].oKey);
 	}
-
-	m_oExtractor.compute(oInitImg, voSiftKeys, oDescriptor);
+	Mat tInitImg;
+	oInitImg.copyTo(tInitImg);
+	m_oExtractor->compute(tInitImg, voSiftKeys, oDescriptor);
 
 	return oDescriptor;
 
@@ -280,12 +280,12 @@ void CTSE::drawOutput(cv::Rect& oROI, cv::Mat& oImage, size_t& nFrames){
 	cv::rectangle(oImage, oPt1, oPt2, cv::Scalar(255,0,0), 3, 8, 0);
 	char frameString[10];
 	char sym[2] ="#";
-	itoa(nFrames, frameString, 10);
-	strcat(frameString,sym);
+	_itoa(nFrames, frameString, 10);
+	strcat_s(frameString,sym);
 	cv::putText(oImage, frameString, cv::Point(10,20), FONT_HERSHEY_COMPLEX_SMALL, 1, CV_RGB(255,0,0));	
 	namedWindow("CTSE", WINDOW_AUTOSIZE ); 
 	imshow("CTSE", oImage);
-	waitKey(10);
+	waitKey(1);
 
 }
 
