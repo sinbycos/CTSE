@@ -1,55 +1,96 @@
 #include "CTSE.h"
-#include <iostream>
-#include "opencv2/xfeatures2d/nonfree.hpp"
-using namespace cv;
-int main(int argc, const char** argv)
-{
-	try
-	{
-		Ptr<xfeatures2d::SIFT> oDetector = xfeatures2d::SiftFeatureDetector::create(CTSE_DEFAULT_RETAIN_SIFT_FEATURES, CTSE_DEFAULT_OCTAVE_LAYERS, CTSE_DEFAULT_CONTRAST_THRESHOLD, CTSE_DEFAULT_EDGE_THRESHOLD, CTSE_DEFAULT_SIGMA);
-		cv::BFMatcher oMatcher(NORM_L2, true);
-		std::vector<std::string> accumulator;
-		std::vector<std::string>::iterator iter, iter1;
-		std::vector<KeyPoint> oDetectedKeys;
-		cv::Point2f oBBCenter;
-		cv::Point2f oBBTopLeftCoordinate, oBBBotRightCoordinate;
-		size_t nFrames = 0, i = 0;
-		size_t  n_BBWidth, n_BBHeight;
-		int frame_counter = 0;
-		cv::Rect roi(647, 30, 42, 42);
-		Mat frame;
-		//std::string video = "--Video Pathp4";
-		std::string video = "2.mp4";
-		VideoCapture cap(video);
-		int times = 8;
-		namedWindow("tracker", 0);
-		resizeWindow("tracker", 100 * times, 50 * times);
-		if (roi.width == 0 || roi.height == 0)
-			return 0;
-		CTSE oCTSAlg;
-		oBBCenter.x = roi.x + roi.width / 2;
-		oBBCenter.y = roi.y + roi.height / 2;
-		printf("Start the tracking process\n");
-		for (;; )
-		{
-			cap >> frame;
-			nFrames = cap.get(CV_CAP_PROP_POS_FRAMES);
-			if (frame.rows == 0 || frame.cols == 0)
-				break;
-			oCTSAlg.process(frame, nFrames, oBBCenter, roi.width, roi.height, oDetector, oMatcher);
-		}
-	}
-	catch (const cv::Exception& et) {
-		std::cerr << "top level caught cv::Exception:\n" << et.what() << std::endl;
-	}
-	catch (const std::exception& et) {
-		std::cerr << "top level caught std::exception:\n" << et.what() << std::endl;
-	}
-	catch (...) {
-		std::cerr << "top level caught unknown exception." << std::endl;
-	}
-	system("paused");
+
+
+static void help(){
+	printf("\n Contextual Tracker with Structural Encoding\n "
+		"tracks one object by analyzing frames from default camera\n"
+		"or from a input video file or from a directory of images.\n"
+		"Usage : \n"
+		"./CTSE [--camera]=<use camera>, [--file]=<path to file>, [--directory]=<image files in directory>, [--center]=<BB Center Coordinates>, [--width]=<BB width>, [--height]=<BB height> \n");
+
 }
 
+const char* keys = {
+	"{c  |camera      |true			   | use camera or not}"
+	"{f  |file        |tree.avi        | movie file path  }"
+	"{d  |directory   |Image directory | directory file path }"
+	"{bcX |coordinatesX |BB Center X	   | BB's center coordinatesX}"
+	"{bcY |coordinatesY |BB Center Y	   | BB's center coordinatesY}"
+	"{w  |width		  |BB width        | BB width}"
+	"{h  |height      |BB height       | BB height}"
+};
 
+int main(int argc, const char** argv){
+	help();
+	Ptr<xfeatures2d::SIFT> oDetector = xfeatures2d::SiftFeatureDetector::create(CTSE_DEFAULT_RETAIN_SIFT_FEATURES, CTSE_DEFAULT_OCTAVE_LAYERS, CTSE_DEFAULT_CONTRAST_THRESHOLD, CTSE_DEFAULT_EDGE_THRESHOLD, CTSE_DEFAULT_SIGMA);
+	cv::BFMatcher oMatcher(NORM_L2,true);
+	cv::VideoCapture oVideoInput;
+	cv::VideoWriter oVideoOut;
+	cv::Mat oInputFrame;
+	std::vector<std::string> accumulator;
+	std::vector<std::string>::iterator iter,iter1;	
+	std::vector<KeyPoint> oDetectedKeys;
+	cv::Point2f oBBCenter;
+	cv::Point2f oBBTopLeftCoordinate, oBBBotRightCoordinate;  
+	size_t nFrames=0, i=0 ; 
+	size_t  n_BBWidth, n_BBHeight;
+
+	cv::CommandLineParser parser(argc, argv, keys);
+	const bool bCamera = parser.get<bool>("c");
+	const string sVideoFilePath = parser.get<string>("f");
+	const string sImageDirectoryPath = parser.get<string>("d");
+	float fCenterX = parser.get<float>("bcX");
+	float fCenterY = parser.get<float>("bcY");
+	oBBCenter = Point2f(fCenterX,fCenterY) ;
+	n_BBWidth = parser.get<size_t>("w");
+	n_BBHeight = parser.get<size_t>("h");
+
+	if(bCamera) {
+		oVideoInput.open(0);
+		oVideoInput.set(CV_CAP_PROP_POS_FRAMES,0); 
+		oVideoInput >> oInputFrame;
+		nFrames = oVideoInput.get(CV_CAP_PROP_POS_FRAMES);
+	}
+
+	else{
+
+		oVideoInput.open(sImageDirectoryPath);
+
+	}
+
+
+	/* If video file is used
+
+	else{
+
+	oVideoInput.open(sVideoFilePath);
+
+	}*/
+
+
+	if( !oVideoInput.isOpened()) {
+
+		if(bCamera)
+			printf("Could not open default camera. \n");
+
+		else 
+			printf("No image directory exists at '%s'. \n", sImageDirectoryPath.c_str());
+		return -1;
+	}
+
+	CTSE oCTSAlg;
+	for(;;){
+		oVideoInput >> oInputFrame;
+		nFrames = oVideoInput.get(CV_CAP_PROP_POS_FRAMES);
+		if(oInputFrame.empty())
+		{	break;}
+		else
+		{
+			oCTSAlg.process(oInputFrame,nFrames, oBBCenter, n_BBWidth, n_BBHeight, oDetector, oMatcher);
+
+		}
+
+	}
+	return 0;
+}
 
