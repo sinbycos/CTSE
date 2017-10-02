@@ -22,7 +22,7 @@ const char* keys = {
 
 int main(int argc, const char** argv){
 	help();
-	cv::SiftFeatureDetector oDetector(CTSE_DEFAULT_RETAIN_SIFT_FEATURES, CTSE_DEFAULT_OCTAVE_LAYERS, CTSE_DEFAULT_CONTRAST_THRESHOLD, CTSE_DEFAULT_EDGE_THRESHOLD, CTSE_DEFAULT_SIGMA);
+	Ptr<xfeatures2d::SIFT> oDetector = xfeatures2d::SiftFeatureDetector::create(CTSE_DEFAULT_RETAIN_SIFT_FEATURES, CTSE_DEFAULT_OCTAVE_LAYERS, CTSE_DEFAULT_CONTRAST_THRESHOLD, CTSE_DEFAULT_EDGE_THRESHOLD, CTSE_DEFAULT_SIGMA);
 	cv::BFMatcher oMatcher(NORM_L2,true);
 	cv::VideoCapture oVideoInput;
 	cv::VideoWriter oVideoOut;
@@ -93,3 +93,4 @@ int main(int argc, const char** argv){
 	}
 	return 0;
 }
+
