@@ -3,7 +3,7 @@ This directory contains a CTSE ( Paper titled 'Contextual Object Tracker with St
 
 The main class used for tracking is CTSE.
 The other class KeyPoint CTSE is used to keep the keypoint's information and the CTSE class interacts wth this class by having an KeyPointCTSE object as a member variable
-The algorithm has dependency of OpenCV library. It can run on opencv versions from 2.4.5 to 2.4.11.
+The algorithm has dependency of OpenCV library and OpenCV-contrib. It can run on opencv versions from 3.0.0 to 3.2.0. 
 
 
 Working Structure:
